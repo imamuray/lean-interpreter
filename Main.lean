@@ -11,28 +11,26 @@ def expr : Expr :=
 #eval expr
 
 def eval : Expr -> Except String Int
-  | .int n => .ok n
-  | .add a b =>
-    match eval a, eval b with
-    | .ok x, .ok y => .ok (x + y)
-    | .error e, _ => .error e
-    | _, .error e => .error e
-  | .sub a b =>
-    match eval a, eval b with
-    | .ok x, .ok y => .ok (x - y)
-    | .error e, _ => .error e
-    | _, .error e => .error e
-  | .mul a b =>
-    match eval a, eval b with
-    | .ok x, .ok y => .ok (x * y)
-    | .error e, _ => .error e
-    | _, .error e => .error e
-  | .div a b =>
-    match eval a, eval b with
-      | .ok _, .ok 0 => .error "division by zero"
-      | .ok x, .ok y => .ok (x / y)
-      | .error e, _ => .error e
-      | _, .error e => .error e
+  | .int n => return n
+  | .add a b => do
+    let x <- eval a
+    let y <- eval b
+    return x + y
+  | .sub a b => do
+    let x <- eval a
+    let y <- eval b
+    return x - y
+  | .mul a b => do
+    let x <- eval a
+    let y <- eval b
+    return x * y
+  | .div a b => do
+    let x <- eval a
+    let y <- eval b
+    if y == 0 then
+      throw "division by zero"
+    else
+      return x / y
 
 def testEval : Expr :=
   .div
