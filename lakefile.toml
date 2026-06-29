@@ -1,0 +1,10 @@
+name = "Interpreter"
+version = "0.1.0"
+defaultTargets = ["interpreter"]
+
+[[lean_lib]]
+name = "Interpreter"
+
+[[lean_exe]]
+name = "interpreter"
+root = "Main"
