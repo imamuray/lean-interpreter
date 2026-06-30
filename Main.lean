@@ -10,27 +10,36 @@ def expr : Expr :=
 #check Nat
 #eval expr
 
-def eval : Expr -> Except String Int
-  | .int n => return n
-  | .add a b => do
-    let x <- eval a
-    let y <- eval b
+def eval : Expr -> Env -> Except String Int
+  | .int n, _ =>
+    return n
+  | .var x, env =>
+    match env x with
+    | some v => return v
+    | none => throw s!"unknown variable: {x}"
+  | .add a b, env => do
+    let x <- eval a env
+    let y <- eval b env
     return x + y
-  | .sub a b => do
-    let x <- eval a
-    let y <- eval b
+  | .sub a b, env => do
+    let x <- eval a env
+    let y <- eval b env
     return x - y
-  | .mul a b => do
-    let x <- eval a
-    let y <- eval b
+  | .mul a b, env => do
+    let x <- eval a env
+    let y <- eval b env
     return x * y
-  | .div a b => do
-    let x <- eval a
-    let y <- eval b
+  | .div a b, env => do
+    let x <- eval a env
+    let y <- eval b env
     if y == 0 then
       throw "division by zero"
     else
       return x / y
+
+def env : Env :=
+  fun x =>
+    if x == "x" then some 5 else none
 
 def testEval : Expr :=
   .div
@@ -42,9 +51,13 @@ def okExpr : Expr :=
 def errExpr : Expr :=
   .div (.int 10) (.int 0)
 
-#eval eval testEval
-#eval eval okExpr
-#eval eval errExpr
+def testExprVar : Expr :=
+  .add (.var "x") (.int 3)
+
+#eval eval testEval env
+#eval eval okExpr env
+#eval eval errExpr env
+#eval eval testExprVar env
 
 def main : IO Unit :=
   IO.println s!"Hello!"
