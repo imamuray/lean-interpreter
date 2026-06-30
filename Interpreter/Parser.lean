@@ -26,7 +26,7 @@ def parseAtom : List Token → Option (Expr × List Token)
 #eval parseAtom [.int 1, .plus, .int 2]
 #eval parseAtom [.ident "x", .plus, .int 1]
 
-def parseMul : List Token → Option (Expr × List Token)
+def parseMulDiv : List Token → Option (Expr × List Token)
   | tokens => do
     let (left, rest) ← parseAtom tokens
     match rest with
@@ -39,17 +39,17 @@ def parseMul : List Token → Option (Expr × List Token)
     | _ =>
       return (left, rest)
 
-#eval parseMul [.int 2, .star, .ident "x"]
+#eval parseMulDiv [.int 2, .star, .ident "x"]
 
 def parseExpr : List Token → Option (Expr × List Token)
   | tokens => do
-    let (left, rest) ← parseMul tokens
+    let (left, rest) ← parseMulDiv tokens
     match rest with
     | .plus :: rest' =>
-      let (right, rest'') ← parseMul rest'
+      let (right, rest'') ← parseMulDiv rest'
       return (.add left right, rest'')
     | .minus :: rest' =>
-      let (right, rest'') ← parseMul rest'
+      let (right, rest'') ← parseMulDiv rest'
       return (.sub left right, rest'')
     | _ =>
       return (left, rest)
