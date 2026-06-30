@@ -15,43 +15,59 @@ def lexInt (s : String) : Option Token := do
   let n ← s.toInt?
   return .int n
 
-def parseAtom : List Token → Option (Expr × List Token)
+mutual
+
+partial def parseAtom : List Token → Option (Expr × List Token)
   | .int n :: rest =>
     some (.int n, rest)
   | .ident x :: rest =>
     some (.var x, rest)
+  | .lparen :: rest => do
+    let (expr, rest') ← parseExpr rest
+    match rest' with
+    | .rparen :: rest'' =>
+      return (expr, rest'')
+    | _ =>
+      none
   | _ =>
     none
 
-#eval parseAtom [.int 1, .plus, .int 2]
-#eval parseAtom [.ident "x", .plus, .int 1]
-
-def parseMulDiv : List Token → Option (Expr × List Token)
+partial def parseMulDiv : List Token → Option (Expr × List Token)
   | tokens => do
     let (left, rest) ← parseAtom tokens
     match rest with
     | .star :: rest' =>
-      let (right, rest'') ← parseAtom rest'
+      let (right, rest'') ← parseMulDiv rest'
       return (.mul left right, rest'')
     | .slash :: rest' =>
-      let (right, rest'') ← parseAtom rest'
+      let (right, rest'') ← parseMulDiv rest'
       return (.div left right, rest'')
     | _ =>
       return (left, rest)
 
-#eval parseMulDiv [.int 2, .star, .ident "x"]
-
-def parseExpr : List Token → Option (Expr × List Token)
+partial def parseAddSub : List Token → Option (Expr × List Token)
   | tokens => do
     let (left, rest) ← parseMulDiv tokens
     match rest with
     | .plus :: rest' =>
-      let (right, rest'') ← parseMulDiv rest'
+      let (right, rest'') ← parseAddSub rest'
       return (.add left right, rest'')
     | .minus :: rest' =>
-      let (right, rest'') ← parseMulDiv rest'
+      let (right, rest'') ← parseAddSub rest'
       return (.sub left right, rest'')
     | _ =>
       return (left, rest)
 
-#eval parseExpr [.int 1, .plus, .int 2]
+partial def parseExpr (tokens : List Token) : Option (Expr × List Token) :=
+  parseAddSub tokens
+
+end
+
+def parse (tokens : List Token) : Option Expr := do
+  let (expr, rest) ← parseExpr tokens
+  match rest with
+  | [] => return expr
+  | _ => none
+
+-- 動作確認
+#eval parse [.int 3, .plus, .int 4, .star, .lparen, .int 5, .minus, .int 2, .rparen]
