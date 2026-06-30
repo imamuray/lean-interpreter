@@ -5,6 +5,7 @@ inductive Expr where
   | sub : Expr -> Expr -> Expr
   | mul : Expr -> Expr -> Expr
   | div : Expr -> Expr -> Expr
+  | letIn : String -> Expr -> Expr -> Expr
 deriving Repr
 
 abbrev Env := String -> Option Int

@@ -36,6 +36,13 @@ def eval : Expr -> Env -> Except String Int
       throw "division by zero"
     else
       return x / y
+  | .letIn name value body, env => do
+    let v <- eval value env
+    eval body (fun x =>
+      if x == name then
+        some v
+      else
+        env x)
 
 def env : Env :=
   fun x =>
@@ -54,10 +61,17 @@ def errExpr : Expr :=
 def testExprVar : Expr :=
   .add (.var "x") (.int 3)
 
-#eval eval testEval env
-#eval eval okExpr env
-#eval eval errExpr env
-#eval eval testExprVar env
+def testExprLetIn : Expr :=
+  .letIn
+    "x"
+    (.int 5)
+    (.add (.var "x") (.int 3))
+
+#eval eval testEval env -- .ok 21
+#eval eval okExpr env -- .ok 5
+#eval eval errExpr env -- .error "dad ivision by zero"
+#eval eval testExprVar env -- .ok 8
+#eval eval testExprLetIn (fun _ => none) -- .ok 8
 
 def main : IO Unit :=
   IO.println s!"Hello!"
