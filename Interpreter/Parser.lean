@@ -1,6 +1,23 @@
 import Interpreter.Expr
 import Interpreter.Lexer
 
+def parseIdent : List Token → Except String (String × List Token)
+  | .ident x :: rest =>
+    .ok (x, rest)
+  | _ =>
+    throw "expected identifier"
+
+def expectedToken
+    (expected : Token)
+    : List Token → Except String (List Token)
+  | t :: rest =>
+    if t == expected then
+      return rest
+    else
+      throw "unexpected token"
+  | _ =>
+    throw "unexpected end"
+
 mutual
 
 partial def parseAtom : List Token → Except String (Expr × List Token)
@@ -15,6 +32,13 @@ partial def parseAtom : List Token → Except String (Expr × List Token)
       return (expr, rest'')
     | _ =>
       throw "expected ')'"
+  | .letKw :: rest => do
+    let (name, rest1) ← parseIdent rest
+    let rest2 ← expectedToken .equal rest1
+    let (value, rest3) ← parseExpr rest2
+    let rest4 ← expectedToken .inKw rest3
+    let (body, rest5) ← parseExpr rest4
+    return (.letIn name value body, rest5)
   | _ =>
     throw "expected expression"
 
@@ -69,3 +93,4 @@ def parse (tokens : List Token) : Except String Expr := do
 
 -- 動作確認
 #eval parse [.int 3, .plus, .int 4, .star, .lparen, .int 5, .minus, .int 2, .rparen]
+#eval parse [.letKw, .ident "x", .equal, .int 2, .inKw, .ident "x", .plus, .int 1]

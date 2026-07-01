@@ -7,7 +7,10 @@ inductive Token where
   | slash
   | lparen
   | rparen
-deriving Repr
+  | letKw
+  | inKw
+  | equal
+deriving Repr, BEq
 
 
 -- 条件を満たす文字列の終端位置を返す
@@ -95,7 +98,13 @@ def nextToken
     return (.int n, pos')
   else if isIdrntStart c then
     let (name, pos') ← readIdent s pos
-    return (.ident name, pos')
+    match name with
+    | "let" =>
+      return (.letKw, pos')
+    | "in" =>
+      return (.inKw, pos')
+    | _ =>
+      return (.ident name, pos')
   else
     match c with
     | '+' =>
@@ -110,6 +119,8 @@ def nextToken
       return (.lparen, advance s pos h)
     | ')' =>
       return (.rparen, advance s pos h)
+    | '=' =>
+      return (.equal, advance s pos h)
     | _ =>
       throw s!"unexpected character '{c}'"
 
@@ -126,6 +137,6 @@ partial def lex
     let rest ← lex s pos'
     return tok :: rest
 
-def s := "_2 +-4 5*/()"
+def s := "let x=1 in +-4 5*/()"
 #eval curr s (s.pos ⟨1⟩ (by decide)) (by decide)
 #eval lex s

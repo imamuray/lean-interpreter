@@ -81,6 +81,8 @@ def run (s : String) : Except String Int := do
   eval expr emptyEnv
 
 #eval run "10 +2*  (3-4)+6/2"
+#eval run "let x = 10 in x + 2" -- .ok 12
+#eval run "let x = 10 in let y = 20 in x + y" -- .ok 30
 
 def main : IO Unit :=
   IO.println s!"Hello!"
