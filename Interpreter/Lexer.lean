@@ -1,5 +1,20 @@
 import Interpreter.Parser
 
+-- 条件を満たす文字列の終端位置を返す
+partial def advanceWhile
+    (pred : Char → Bool)
+    (s : String)
+    (pos : s.Pos)
+    : s.Pos :=
+  if h : pos = s.endPos then
+    pos
+  else
+    let c := pos.get h
+    if pred c then
+      advanceWhile pred s (pos.next h)
+    else
+      pos
+
 def atEnd (s : String) (pos : s.Pos) : Bool :=
   pos == s.endPos
 
@@ -19,38 +34,17 @@ def advance
     : s.Pos :=
   pos.next h
 
-partial def skipSpaces
+def skipSpaces
     (s : String)
     (pos : s.Pos)
     : s.Pos :=
-  if h : pos = s.endPos then
-    pos
-  else
-    let c := curr s pos h
-    if c.isWhitespace then
-      skipSpaces s (advance s pos h)
-    else
-      pos
-
--- 数字列の終端位置を返す
-partial def readDigits
-    (s : String)
-    (pos : s.Pos)
-    : s.Pos :=
-  if h : pos = s.endPos then
-    pos
-  else
-    let c := curr s pos h
-    if c.isDigit then
-      readDigits s (pos.next h)
-    else
-      pos
+  advanceWhile Char.isWhitespace s pos
 
 def readInt
     (s : String)
     (pos : s.Pos)
     : Except String (Int × s.Pos) :=
-  let endPos := readDigits s pos
+  let endPos := advanceWhile Char.isDigit s pos
   let digits := s.extract pos endPos
   match digits.toInt? with
   | some n =>
@@ -98,6 +92,6 @@ partial def lex
     let rest ← lex s pos'
     return tok :: rest
 
-def s := "22+-45*/()"
+def s := "2 +-4 5*/()"
 #eval curr s (s.pos ⟨1⟩ (by decide)) (by decide)
 #eval lex s
