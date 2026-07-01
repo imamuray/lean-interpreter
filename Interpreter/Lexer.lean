@@ -52,16 +52,40 @@ def readInt
   | none =>
     throw s!"invalid integer: {digits}"
 
+def isIdrntStart (c : Char) : Bool :=
+  c.isAlpha || c == '_'
+
+def isIdrntChar (c : Char) : Bool :=
+  c.isAlpha || c.isDigit || c == '_'
+
+def readIdent
+    (s : String)
+    (pos : s.Pos)
+    : Except String (String × s.Pos) :=
+  if h : pos = s.endPos then
+    throw "expected identifer"
+  else
+    let c := pos.get h
+    if !isIdrntStart c then
+      throw s!"invalid identifer start: {c}"
+    else
+      let endPos := advanceWhile isIdrntChar s (pos.next h)
+      let name := s.extract pos endPos
+      return (name, endPos)
+
 -- 実装を簡単にするためここではEOFチェックはしない
 def nextToken
     (s : String)
     (pos : s.Pos)
     (h : pos ≠ s.endPos)
-    : Except String (Token × s.Pos) :=
+    : Except String (Token × s.Pos) := do
   let c := curr s pos h
-  if c.isDigit then do
+  if c.isDigit then
     let (n, pos') ← readInt s pos
     return (.int n, pos')
+  else if isIdrntStart c then
+    let (name, pos') ← readIdent s pos
+    return (.ident name, pos')
   else
     match c with
     | '+' =>
@@ -92,6 +116,6 @@ partial def lex
     let rest ← lex s pos'
     return tok :: rest
 
-def s := "2 +-4 5*/()"
+def s := "_2 +-4 5*/()"
 #eval curr s (s.pos ⟨1⟩ (by decide)) (by decide)
 #eval lex s
