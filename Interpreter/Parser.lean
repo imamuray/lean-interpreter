@@ -32,31 +32,41 @@ partial def parseAtom : List Token → Option (Expr × List Token)
   | _ =>
     none
 
-partial def parseMulDiv : List Token → Option (Expr × List Token)
-  | tokens => do
-    let (left, rest) ← parseAtom tokens
-    match rest with
-    | .star :: rest' =>
-      let (right, rest'') ← parseMulDiv rest'
-      return (.mul left right, rest'')
-    | .slash :: rest' =>
-      let (right, rest'') ← parseMulDiv rest'
-      return (.div left right, rest'')
-    | _ =>
-      return (left, rest)
+partial def parseMulDivLoop
+  (left : Expr)
+  (tokens : List Token)
+  : Option (Expr × List Token) :=
+  match tokens with
+  | .star :: rest => do
+    let (right, rest') ← parseAtom rest
+    parseMulDivLoop (.mul left right) rest'
+  | .slash :: rest => do
+    let (right, rest') ← parseAtom rest
+    parseMulDivLoop (.div left right) rest'
+  | _ =>
+    return (left, tokens)
 
-partial def parseAddSub : List Token → Option (Expr × List Token)
-  | tokens => do
-    let (left, rest) ← parseMulDiv tokens
-    match rest with
-    | .plus :: rest' =>
-      let (right, rest'') ← parseAddSub rest'
-      return (.add left right, rest'')
-    | .minus :: rest' =>
-      let (right, rest'') ← parseAddSub rest'
-      return (.sub left right, rest'')
-    | _ =>
-      return (left, rest)
+partial def parseMulDiv (tokens : List Token) : Option (Expr × List Token) := do
+    let (left, rest) ← parseAtom tokens
+    parseMulDivLoop left rest
+
+partial def parseAddSubLoop
+  (left : Expr)
+  (tokens : List Token)
+  : Option (Expr × List Token) :=
+  match tokens with
+  | .plus :: rest => do
+    let (right, rest') ← parseMulDiv rest
+    parseAddSubLoop (.add left right) rest'
+  | .minus :: rest => do
+    let (right, rest') ← parseMulDiv rest
+    parseAddSubLoop (.sub left right) rest'
+  | _ =>
+    return (left, tokens)
+
+partial def parseAddSub (tokens : List Token) : Option (Expr × List Token) := do
+  let (left, rest) ← parseMulDiv tokens
+  parseAddSubLoop left rest
 
 partial def parseExpr (tokens : List Token) : Option (Expr × List Token) :=
   parseAddSub tokens
