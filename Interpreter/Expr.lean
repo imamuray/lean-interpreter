@@ -9,3 +9,6 @@ inductive Expr where
 deriving Repr
 
 abbrev Env := String -> Option Int
+
+def emptyEnv : Env :=
+  fun _ => none

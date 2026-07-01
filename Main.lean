@@ -1,4 +1,6 @@
 import Interpreter.Expr
+import Interpreter.Lexer
+import Interpreter.Parser
 
 def expr : Expr :=
   Expr.mul
@@ -72,6 +74,13 @@ def testExprLetIn : Expr :=
 #eval eval errExpr env -- .error "dad ivision by zero"
 #eval eval testExprVar env -- .ok 8
 #eval eval testExprLetIn (fun _ => none) -- .ok 8
+
+def run (s : String) : Except String Int := do
+  let tokens ← lex s
+  let expr ← parse tokens
+  eval expr emptyEnv
+
+#eval run "10 +2*  (3-4)+6/2"
 
 def main : IO Unit :=
   IO.println s!"Hello!"
