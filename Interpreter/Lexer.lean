@@ -32,28 +32,29 @@ partial def skipSpaces
     else
       pos
 
+-- 数字列の終端位置を返す
 partial def readDigits
     (s : String)
     (pos : s.Pos)
-    (acc : String := "")
-    : String × s.Pos :=
+    : s.Pos :=
   if h : pos = s.endPos then
-    (acc, pos)
+    pos
   else
     let c := curr s pos h
     if c.isDigit then
-      readDigits s (advance s pos h) (acc.push c)
+      readDigits s (pos.next h)
     else
-      (acc, pos)
+      pos
 
 def readInt
     (s : String)
     (pos : s.Pos)
     : Except String (Int × s.Pos) :=
-  let (digits, pos') := readDigits s pos
+  let endPos := readDigits s pos
+  let digits := s.extract pos endPos
   match digits.toInt? with
   | some n =>
-    return (n, pos')
+    return (n, endPos)
   | none =>
     throw s!"invalid integer: {digits}"
 
