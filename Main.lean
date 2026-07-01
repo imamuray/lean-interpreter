@@ -12,7 +12,7 @@ def expr : Expr :=
 #check Nat
 #eval expr
 
-def eval : Expr -> Env -> Except String Int
+def eval : Expr → Env → Except String Int
   | .int n, _ =>
     return n
   | .var x, env =>
@@ -20,26 +20,26 @@ def eval : Expr -> Env -> Except String Int
     | some v => return v
     | none => throw s!"unknown variable: {x}"
   | .add a b, env => do
-    let x <- eval a env
-    let y <- eval b env
+    let x ← eval a env
+    let y ← eval b env
     return x + y
   | .sub a b, env => do
-    let x <- eval a env
-    let y <- eval b env
+    let x ← eval a env
+    let y ← eval b env
     return x - y
   | .mul a b, env => do
-    let x <- eval a env
-    let y <- eval b env
+    let x ← eval a env
+    let y ← eval b env
     return x * y
   | .div a b, env => do
-    let x <- eval a env
-    let y <- eval b env
+    let x ← eval a env
+    let y ← eval b env
     if y == 0 then
       throw "division by zero"
     else
       return x / y
   | .letIn name value body, env => do
-    let v <- eval value env
+    let v ← eval value env
     eval body (fun x =>
       if x == name then
         some v
