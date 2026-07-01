@@ -1,15 +1,5 @@
 import Interpreter.Expr
-
-inductive Token where
-  | int : Int → Token
-  | ident : String → Token
-  | plus
-  | minus
-  | star
-  | slash
-  | lparen
-  | rparen
-deriving Repr
+import Interpreter.Lexer
 
 mutual
 

@@ -1,4 +1,14 @@
-import Interpreter.Parser
+inductive Token where
+  | int : Int → Token
+  | ident : String → Token
+  | plus
+  | minus
+  | star
+  | slash
+  | lparen
+  | rparen
+deriving Repr
+
 
 -- 条件を満たす文字列の終端位置を返す
 partial def advanceWhile
