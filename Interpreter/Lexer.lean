@@ -32,6 +32,30 @@ partial def skipSpaces
     else
       pos
 
+partial def readDigits
+    (s : String)
+    (pos : s.Pos)
+    (acc : String := "")
+    : String × s.Pos :=
+  if h : pos = s.endPos then
+    (acc, pos)
+  else
+    let c := curr s pos h
+    if c.isDigit then
+      readDigits s (advance s pos h) (acc.push c)
+    else
+      (acc, pos)
+
+def readInt
+    (s : String)
+    (pos : s.Pos)
+    : Except String (Int × s.Pos) :=
+  let (digits, pos') := readDigits s pos
+  match digits.toInt? with
+  | some n =>
+    return (n, pos')
+  | none =>
+    throw s!"invalid integer: {digits}"
 
 -- 実装を簡単にするためここではEOFチェックはしない
 def nextToken
@@ -40,21 +64,25 @@ def nextToken
     (h : pos ≠ s.endPos)
     : Except String (Token × s.Pos) :=
   let c := curr s pos h
-  match c with
-  | '+' =>
-    return (.plus, advance s pos h)
-  | '-' =>
-    return (.minus, advance s pos h)
-  | '*' =>
-    return (.star, advance s pos h)
-  | '/' =>
-    return (.slash, advance s pos h)
-  | '(' =>
-    return (.lparen, advance s pos h)
-  | ')' =>
-    return (.rparen, advance s pos h)
-  | _ =>
-    throw s!"unexpected character '{c}'"
+  if c.isDigit then do
+    let (n, pos') ← readInt s pos
+    return (.int n, pos')
+  else
+    match c with
+    | '+' =>
+      return (.plus, advance s pos h)
+    | '-' =>
+      return (.minus, advance s pos h)
+    | '*' =>
+      return (.star, advance s pos h)
+    | '/' =>
+      return (.slash, advance s pos h)
+    | '(' =>
+      return (.lparen, advance s pos h)
+    | ')' =>
+      return (.rparen, advance s pos h)
+    | _ =>
+      throw s!"unexpected character '{c}'"
 
 partial def lex
     (s : String)
@@ -69,6 +97,6 @@ partial def lex
     let rest ← lex s pos'
     return tok :: rest
 
-def s := "+-*/()"
+def s := "22+-45*/()"
 #eval curr s (s.pos ⟨1⟩ (by decide)) (by decide)
 #eval lex s
