@@ -90,7 +90,3 @@ def parse (tokens : List Token) : Except String Expr := do
     return expr
   | _ =>
     throw "unexpected tokens"
-
--- 動作確認
-#eval parse [.int 3, .plus, .int 4, .star, .lparen, .int 5, .minus, .int 2, .rparen]
-#eval parse [.letKw, .ident "x", .equal, .int 2, .inKw, .ident "x", .plus, .int 1]

@@ -2,15 +2,6 @@ import Interpreter.Expr
 import Interpreter.Lexer
 import Interpreter.Parser
 
-def expr : Expr :=
-  Expr.mul
-    (Expr.add
-      (Expr.int 1)
-      (Expr.int 2))
-    (Expr.int 3)
-
-#check Nat
-#eval expr
 
 def eval : Expr → Env → Except String Value
   | .int n, _ =>
@@ -67,43 +58,43 @@ def eval : Expr → Env → Except String Value
       else
         env x)
 
-def env : Env :=
-  fun x =>
-    if x == "x" then some (.int 5) else none
-
-def testEval : Expr :=
-  .div
-    (.sub (.mul (.int 10) (.int 5)) (.int 8))
-    (.int 2)
-
-def okExpr : Expr :=
-  .div (.int 10) (.int 2)
-def errExpr : Expr :=
-  .div (.int 10) (.int 0)
-
-def testExprVar : Expr :=
-  .add (.var "x") (.int 3)
-
-def testExprLetIn : Expr :=
-  .letIn
-    "x"
-    (.int 5)
-    (.add (.var "x") (.int 3))
-
-#eval eval testEval env -- .ok 21
-#eval eval okExpr env -- .ok 5
-#eval eval errExpr env -- .error "division by zero"
-#eval eval testExprVar env -- .ok 8
-#eval eval testExprLetIn (fun _ => none) -- .ok 8
-
 def run (s : String) : Except String Value := do
   let tokens ← lex s
   let expr ← parse tokens
   eval expr emptyEnv
 
-#eval run "10 +2*  (3-4)+6/2"
-#eval run "let x = 10 in x + 2" -- .ok 12
-#eval run "let x = 10 in let y = 20 in x + y" -- .ok 30
+def runIO (s : String) : IO Unit := do
+  match run s with
+  | .ok v =>
+    IO.println (repr v)
+  | .error e =>
+    IO.println s!"error: {e}"
+
+partial def repl : IO Unit := do
+  let env := emptyEnv
+  IO.println "Mini Interpreter REPL"
+  IO.println "type 'exit' to quit"
+
+  let rec loop (env : Env) : IO Unit := do
+    IO.print "> "
+    let stdin ← IO.getStdin
+    let input ← stdin.getLine
+
+    -- 空白行ならスキップ
+    if input.all Char.isWhitespace then
+      loop env
+
+    if input.trimAscii == "exit" then
+      return ()
+
+    match run input with
+    | .ok v =>
+      IO.println (repr v)
+      loop env
+    | .error e =>
+      IO.println s!"error: {e}"
+      loop env
+  loop env
 
 def main : IO Unit :=
-  IO.println s!"Hello!"
+  repl

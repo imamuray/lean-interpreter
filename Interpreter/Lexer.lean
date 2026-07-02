@@ -136,7 +136,3 @@ partial def lex
     let (tok, pos') ← nextToken s pos h
     let rest ← lex s pos'
     return tok :: rest
-
-def s := "let x=1 in +-4 5*/()"
-#eval curr s (s.pos ⟨1⟩ (by decide)) (by decide)
-#eval lex s

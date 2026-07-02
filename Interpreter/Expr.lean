@@ -11,7 +11,12 @@ deriving Repr
 inductive Value where
   | int : Int → Value
   | bool : Bool → Value -- boolはまだ扱わないが、evalの判定用に先に置いておく
-deriving Repr
+
+instance : Repr Value where
+  reprPrec v _ :=
+    match v with
+    | .int n => s!"{n}"
+    | .bool b => s!"{b}"
 
 abbrev Env := String → Option Value
 
