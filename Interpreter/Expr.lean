@@ -8,7 +8,12 @@ inductive Expr where
   | letIn : String → Expr → Expr → Expr
 deriving Repr
 
-abbrev Env := String → Option Int
+inductive Value where
+  | int : Int → Value
+  | bool : Bool → Value -- boolはまだ扱わないが、evalの判定用に先に置いておく
+deriving Repr
+
+abbrev Env := String → Option Value
 
 def emptyEnv : Env :=
   fun _ => none

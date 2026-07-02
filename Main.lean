@@ -12,32 +12,53 @@ def expr : Expr :=
 #check Nat
 #eval expr
 
-def eval : Expr → Env → Except String Int
+def eval : Expr → Env → Except String Value
   | .int n, _ =>
-    return n
+    return .int n
+
   | .var x, env =>
     match env x with
     | some v => return v
     | none => throw s!"unknown variable: {x}"
+
   | .add a b, env => do
-    let x ← eval a env
-    let y ← eval b env
-    return x + y
+    let va ← eval a env
+    let vb ← eval b env
+    match va, vb with
+    | .int x, .int y =>
+      return .int (x + y)
+    | _, _ =>
+      throw "type error in +"
+
   | .sub a b, env => do
-    let x ← eval a env
-    let y ← eval b env
-    return x - y
+    let va ← eval a env
+    let vb ← eval b env
+    match va, vb with
+    | .int x, .int y =>
+      return .int (x - y)
+    | _, _ =>
+      throw "type error in -"
+
   | .mul a b, env => do
-    let x ← eval a env
-    let y ← eval b env
-    return x * y
+    let va ← eval a env
+    let vb ← eval b env
+    match va, vb with
+    | .int x, .int y =>
+      return .int (x * y)
+    | _, _ =>
+      throw "type error in *"
+
   | .div a b, env => do
-    let x ← eval a env
-    let y ← eval b env
-    if y == 0 then
+    let va ← eval a env
+    let vb ← eval b env
+    match va, vb with
+    | .int _, .int 0 =>
       throw "division by zero"
-    else
-      return x / y
+    | .int x, .int y =>
+      return .int (x / y)
+    | _, _ =>
+      throw "type eerir in /"
+
   | .letIn name value body, env => do
     let v ← eval value env
     eval body (fun x =>
@@ -48,7 +69,7 @@ def eval : Expr → Env → Except String Int
 
 def env : Env :=
   fun x =>
-    if x == "x" then some 5 else none
+    if x == "x" then some (.int 5) else none
 
 def testEval : Expr :=
   .div
@@ -71,11 +92,11 @@ def testExprLetIn : Expr :=
 
 #eval eval testEval env -- .ok 21
 #eval eval okExpr env -- .ok 5
-#eval eval errExpr env -- .error "dad ivision by zero"
+#eval eval errExpr env -- .error "division by zero"
 #eval eval testExprVar env -- .ok 8
 #eval eval testExprLetIn (fun _ => none) -- .ok 8
 
-def run (s : String) : Except String Int := do
+def run (s : String) : Except String Value := do
   let tokens ← lex s
   let expr ← parse tokens
   eval expr emptyEnv
