@@ -10,6 +10,10 @@ inductive Token where
   | letKw
   | inKw
   | equal
+  | trueKw
+  | falseKw
+  | eqEq
+  | lt
 deriving Repr, BEq
 
 
@@ -65,10 +69,10 @@ def readInt
   | none =>
     throw s!"invalid integer: {digits}"
 
-def isIdrntStart (c : Char) : Bool :=
+def isIdentStart (c : Char) : Bool :=
   c.isAlpha || c == '_'
 
-def isIdrntChar (c : Char) : Bool :=
+def isIdentChar (c : Char) : Bool :=
   c.isAlpha || c.isDigit || c == '_'
 
 def readIdent
@@ -79,10 +83,10 @@ def readIdent
     throw "expected identifer"
   else
     let c := pos.get h
-    if !isIdrntStart c then
+    if !isIdentStart c then
       throw s!"invalid identifer start: {c}"
     else
-      let endPos := advanceWhile isIdrntChar s (pos.next h)
+      let endPos := advanceWhile isIdentChar s (pos.next h)
       let name := s.extract pos endPos
       return (name, endPos)
 
@@ -96,15 +100,19 @@ def nextToken
   if c.isDigit then
     let (n, pos') ← readInt s pos
     return (.int n, pos')
-  else if isIdrntStart c then
-    let (name, pos') ← readIdent s pos
-    match name with
+  else if isIdentStart c then
+    let (word, pos') ← readIdent s pos
+    match word with
     | "let" =>
       return (.letKw, pos')
     | "in" =>
       return (.inKw, pos')
+    | "true" =>
+      return (.trueKw, pos')
+    | "false" =>
+      return (.falseKw, pos')
     | _ =>
-      return (.ident name, pos')
+      return (.ident word, pos')
   else
     match c with
     | '+' =>
@@ -119,8 +127,18 @@ def nextToken
       return (.lparen, advance s pos h)
     | ')' =>
       return (.rparen, advance s pos h)
+    | '<' =>
+      return (.lt, advance s pos h)
     | '=' =>
-      return (.equal, advance s pos h)
+      let nextPos := advance s pos h
+      if h' : nextPos = s.endPos then
+        return (.equal, advance s pos h)
+      else
+        let nextChar := curr s nextPos h'
+        if nextChar == '=' then
+          return (.eqEq, advance s nextPos h')
+        else
+          return (.equal, advance s pos h)
     | _ =>
       throw s!"unexpected character '{c}'"
 

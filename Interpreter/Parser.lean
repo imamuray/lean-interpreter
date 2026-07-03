@@ -22,9 +22,13 @@ mutual
 
 partial def parseAtom : List Token → Except String (Expr × List Token)
   | .int n :: rest =>
-    .ok (.int n, rest)
+    return (.int n, rest)
   | .ident x :: rest =>
-    .ok (.var x, rest)
+    return (.var x, rest)
+  | .trueKw :: rest =>
+    return (.bool true, rest)
+  | .falseKw :: rest =>
+    return (.bool false, rest)
   | .lparen :: rest => do
     let (expr, rest') ← parseExpr rest
     match rest' with
@@ -78,8 +82,20 @@ partial def parseAddSub (tokens : List Token) : Except String (Expr × List Toke
   let (left, rest) ← parseMulDiv tokens
   parseAddSubLoop left rest
 
+partial def parseCompare (tokens : List Token) : Except String (Expr × List Token) := do
+  let (left, rest) ← parseAddSub tokens
+  match rest with
+  | .lt :: rest' =>
+    let (right, rest'') ← parseAddSub rest'
+    return (.lt left right, rest'')
+  | .eqEq :: rest' =>
+    let (right, rest'') ← parseAddSub rest'
+    return (.eq left right, rest'')
+  | _ =>
+    return (left, rest)
+
 partial def parseExpr (tokens : List Token) : Except String (Expr × List Token) :=
-  parseAddSub tokens
+  parseCompare tokens
 
 end
 
