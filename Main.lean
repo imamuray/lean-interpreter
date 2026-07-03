@@ -1,7 +1,4 @@
-import Interpreter.Eval
-import Interpreter.Expr
-import Interpreter.Lexer
-import Interpreter.Parser
+import Interpreter
 
 partial def repl : IO Unit := do
   let env := emptyEnv
