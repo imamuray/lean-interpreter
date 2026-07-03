@@ -7,6 +7,9 @@ def eval : Expr → Env → Except String Value
   | .int n, _ =>
     return .int n
 
+  | .bool b, _ =>
+    return .bool b
+
   | .var x, env =>
     match env x with
     | some v => return v
@@ -48,7 +51,27 @@ def eval : Expr → Env → Except String Value
     | .int x, .int y =>
       return .int (x / y)
     | _, _ =>
-      throw "type eerir in /"
+      throw "type error in /"
+
+  | .eq e1 e2, env => do
+    let v1 ← eval e1 env
+    let v2 ← eval e2 env
+    match v1, v2 with
+    | .int x, .int y =>
+      return .bool (x == y)
+    | .bool x, .bool y =>
+      return .bool (x == y)
+    | _, _ =>
+      throw "type missmatch"
+
+  | .lt e1 e2, env => do
+    let v1 ← eval e1 env
+    let v2 ← eval e2 env
+    match v1, v2 with
+    | .int x, .int y =>
+      return .bool (x < y)
+    | _, _ =>
+      throw "'<' expects integers"
 
   | .letIn name value body, env => do
     let v ← eval value env

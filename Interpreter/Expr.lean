@@ -1,10 +1,13 @@
 inductive Expr where
   | int : Int → Expr
+  | bool : Bool → Expr
   | var : String → Expr
   | add : Expr → Expr → Expr
   | sub : Expr → Expr → Expr
   | mul : Expr → Expr → Expr
   | div : Expr → Expr → Expr
+  | eq : Expr → Expr → Expr
+  | lt : Expr → Expr → Expr
   | letIn : String → Expr → Expr → Expr
 deriving Repr
 

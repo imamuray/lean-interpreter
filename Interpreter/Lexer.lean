@@ -10,6 +10,10 @@ inductive Token where
   | letKw
   | inKw
   | equal
+  | trueKw
+  | falseKw
+  | equalEqual
+  | less
 deriving Repr, BEq
 
 
@@ -65,10 +69,10 @@ def readInt
   | none =>
     throw s!"invalid integer: {digits}"
 
-def isIdrntStart (c : Char) : Bool :=
+def isIdentStart (c : Char) : Bool :=
   c.isAlpha || c == '_'
 
-def isIdrntChar (c : Char) : Bool :=
+def isIdentChar (c : Char) : Bool :=
   c.isAlpha || c.isDigit || c == '_'
 
 def readIdent
@@ -79,10 +83,10 @@ def readIdent
     throw "expected identifer"
   else
     let c := pos.get h
-    if !isIdrntStart c then
+    if !isIdentStart c then
       throw s!"invalid identifer start: {c}"
     else
-      let endPos := advanceWhile isIdrntChar s (pos.next h)
+      let endPos := advanceWhile isIdentChar s (pos.next h)
       let name := s.extract pos endPos
       return (name, endPos)
 
@@ -96,7 +100,7 @@ def nextToken
   if c.isDigit then
     let (n, pos') ← readInt s pos
     return (.int n, pos')
-  else if isIdrntStart c then
+  else if isIdentStart c then
     let (name, pos') ← readIdent s pos
     match name with
     | "let" =>
