@@ -22,9 +22,13 @@ mutual
 
 partial def parseAtom : List Token → Except String (Expr × List Token)
   | .int n :: rest =>
-    .ok (.int n, rest)
+    return (.int n, rest)
   | .ident x :: rest =>
-    .ok (.var x, rest)
+    return (.var x, rest)
+  | .trueKw :: rest =>
+    return (.bool true, rest)
+  | .falseKw :: rest =>
+    return (.bool false, rest)
   | .lparen :: rest => do
     let (expr, rest') ← parseExpr rest
     match rest' with

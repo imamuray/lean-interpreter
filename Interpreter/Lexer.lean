@@ -101,14 +101,18 @@ def nextToken
     let (n, pos') ← readInt s pos
     return (.int n, pos')
   else if isIdentStart c then
-    let (name, pos') ← readIdent s pos
-    match name with
+    let (word, pos') ← readIdent s pos
+    match word with
     | "let" =>
       return (.letKw, pos')
     | "in" =>
       return (.inKw, pos')
+    | "true" =>
+      return (.trueKw, pos')
+    | "false" =>
+      return (.falseKw, pos')
     | _ =>
-      return (.ident name, pos')
+      return (.ident word, pos')
   else
     match c with
     | '+' =>
