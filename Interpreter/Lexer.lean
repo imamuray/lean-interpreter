@@ -12,8 +12,8 @@ inductive Token where
   | equal
   | trueKw
   | falseKw
-  | equalEqual
-  | less
+  | eqEq
+  | lt
 deriving Repr, BEq
 
 
@@ -127,8 +127,18 @@ def nextToken
       return (.lparen, advance s pos h)
     | ')' =>
       return (.rparen, advance s pos h)
+    | '<' =>
+      return (.lt, advance s pos h)
     | '=' =>
-      return (.equal, advance s pos h)
+      let nextPos := advance s pos h
+      if h' : nextPos = s.endPos then
+        return (.equal, advance s pos h)
+      else
+        let nextChar := curr s nextPos h'
+        if nextChar == '=' then
+          return (.eqEq, advance s nextPos h')
+        else
+          return (.equal, advance s pos h)
     | _ =>
       throw s!"unexpected character '{c}'"
 
