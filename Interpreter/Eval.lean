@@ -2,6 +2,13 @@ import Interpreter.Expr
 import Interpreter.Lexer
 import Interpreter.Parser
 
+def extendEnv (env : Env) (name : String) (value : Value) : Env :=
+  fun x =>
+    if x == name then
+      some value
+    else
+      env x
+
 def eval : Expr → Env → Except String Value
   | .int n, _ =>
     return .int n
@@ -74,11 +81,7 @@ def eval : Expr → Env → Except String Value
 
   | .letIn name value body, env => do
     let v ← eval value env
-    eval body (fun x =>
-      if x == name then
-        some v
-      else
-        env x)
+    eval body (extendEnv env name v)
   | .ifThenElse cond thenExpr elseExpr, env => do
     let v ← eval cond env
     match v with
@@ -90,7 +93,10 @@ def eval : Expr → Env → Except String Value
     | _ =>
       throw "type error in if"
 
-def run (s : String) : Except String Value := do
-  let tokens ← lex s
+def runWithEnv (input : String) (env : Env) : Except String Value := do
+  let tokens ← lex input
   let expr ← parse tokens
-  eval expr emptyEnv
+  eval expr env
+
+def run (input : String) : Except String Value := do
+  runWithEnv input emptyEnv
