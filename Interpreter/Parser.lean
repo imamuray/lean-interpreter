@@ -36,13 +36,6 @@ partial def parseAtom : List Token → Except String (Expr × List Token)
       return (expr, rest'')
     | _ =>
       throw "expected ')'"
-  | .letKw :: rest => do
-    let (name, rest1) ← parseIdent rest
-    let rest2 ← expectedToken .equal rest1
-    let (value, rest3) ← parseExpr rest2
-    let rest4 ← expectedToken .inKw rest3
-    let (body, rest5) ← parseExpr rest4
-    return (.letIn name value body, rest5)
   | _ =>
     throw "expected expression"
 
@@ -94,6 +87,18 @@ partial def parseCompare (tokens : List Token) : Except String (Expr × List Tok
   | _ =>
     return (left, rest)
 
+partial def parseLet (tokens : List Token) : Except String (Expr × List Token) := do
+  match tokens with
+  | .letKw :: rest =>
+    let (name, rest1) ← parseIdent rest
+    let rest2 ← expectedToken .equal rest1
+    let (value, rest3) ← parseExpr rest2
+    let rest4 ← expectedToken .inKw rest3
+    let (body, rest5) ← parseExpr rest4
+    return (.letIn name value body, rest5)
+  | _ =>
+    parseCompare tokens
+
 partial def parseIf (tokens : List Token) : Except String (Expr × List Token) := do
   match tokens with
   | .ifKw :: rest1 =>
@@ -110,7 +115,7 @@ partial def parseIf (tokens : List Token) : Except String (Expr × List Token) :
     | _ =>
       throw "expected 'then'"
   | _ =>
-    parseCompare tokens
+    parseLet tokens
 
 partial def parseExpr (tokens : List Token) : Except String (Expr × List Token) :=
   parseIf tokens
