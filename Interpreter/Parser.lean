@@ -94,8 +94,26 @@ partial def parseCompare (tokens : List Token) : Except String (Expr × List Tok
   | _ =>
     return (left, rest)
 
+partial def parseIf (tokens : List Token) : Except String (Expr × List Token) := do
+  match tokens with
+  | .ifKw :: rest1 =>
+    let (cond, rest2) ← parseExpr rest1
+    match rest2 with
+    | .thenKw :: rest3 =>
+      let (thenExpr, rest4) ← parseExpr rest3
+      match rest4 with
+      | .elseKw :: rest5 =>
+        let (elseExpr, rest6) ← parseExpr rest5
+        return (.ifThenElse cond thenExpr elseExpr, rest6)
+      | _ =>
+        throw "expected 'else'"
+    | _ =>
+      throw "expected 'then'"
+  | _ =>
+    parseCompare tokens
+
 partial def parseExpr (tokens : List Token) : Except String (Expr × List Token) :=
-  parseCompare tokens
+  parseIf tokens
 
 end
 

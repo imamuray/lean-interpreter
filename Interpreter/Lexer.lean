@@ -14,6 +14,9 @@ inductive Token where
   | falseKw
   | eqEq
   | lt
+  | ifKw
+  | thenKw
+  | elseKw
 deriving Repr, BEq
 
 
@@ -111,6 +114,12 @@ def nextToken
       return (.trueKw, pos')
     | "false" =>
       return (.falseKw, pos')
+    | "if" =>
+      return (.ifKw, pos')
+    | "then" =>
+      return (.thenKw, pos')
+    | "else" =>
+      return (.elseKw, pos')
     | _ =>
       return (.ident word, pos')
   else

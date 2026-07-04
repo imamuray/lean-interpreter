@@ -79,6 +79,16 @@ def eval : Expr → Env → Except String Value
         some v
       else
         env x)
+  | .ifThenElse cond thenExpr elseExpr, env => do
+    let v ← eval cond env
+    match v with
+    | .bool b =>
+      if b then
+        eval thenExpr env
+      else
+        eval elseExpr env
+    | _ =>
+      throw "type error in if"
 
 def run (s : String) : Except String Value := do
   let tokens ← lex s

@@ -9,6 +9,7 @@ inductive Expr where
   | eq : Expr → Expr → Expr
   | lt : Expr → Expr → Expr
   | letIn : String → Expr → Expr → Expr
+  | ifThenElse : Expr → Expr → Expr → Expr
 deriving Repr
 
 inductive Value where
